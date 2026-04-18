@@ -58,3 +58,21 @@ In `test2.js`, we evolved our script from a simple static load into a structured
 
 3. **Combining Features:**
    - We successfully combined our new `stages` with tight `thresholds` to ensure that our system didn't just survive the load curve, but that its latency (`p(95)`) remained within our SLA boundaries the entire time.
+
+---
+
+## Lecture 3: What we learned in `test3.js`
+
+In `test3.js`, we focused on **Assertions** and **Granular Thresholds**:
+
+1. **Adding Checks (Assertions):**
+   - We imported `check` from `k6` to validate that the server's responses were actually successful.
+   - We added `check(response, { ... })` and verified two things:
+     - The HTTP status code was exactly 200 (`response.status === 200`).
+     - The HTML response body successfully contained the exact word "pizza" (`response.body.includes("pizza")`).
+   - *Note:* Unlike thresholds, a failed `check` does **not** fail or stop the load test, but it does report the failure rate in the final metrics!
+
+2. **Tag-Specific Thresholds:**
+   - We added a specialized threshold: `'http_req_duration{name:api}': ["p(95)<500"]`.
+   - Instead of tracking the duration of *all* HTTP requests globally, this applies a threshold strictly to requests that possess the specific tag `name:api`.
+   - This allows you to set different performance SLA rules for different endpoints (e.g., your `/login` API might need to be `<200ms`, while your `/search` API only needs to be `<800ms`).
