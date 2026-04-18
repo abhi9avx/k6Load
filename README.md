@@ -35,3 +35,26 @@ In our first script (`test1.js`), we covered the fundamentals of writing a **Smo
    - `iteration_duration`: The time taken to complete one full iteration of the `default function()`.
    - `vus` / `vus_max`: The current and maximum number of Virtual Users actively running.
    - **Percentiles (`p50`, `p90`, `p95`):** Important metrics that show response times for a given percentage of requests. For example, a `p95` of 361ms means 95% of your requests were completed in 361ms or less.
+
+4. **Using Thresholds (Pass/Fail Criteria):**
+   - Added a `thresholds` object in `options` to automatically fail the test if performance metrics do not meet SLA expectations.
+   - Used `http_req_duration: ["p(95)<400"]` to ensure 95% of requests complete in under 400ms.
+   - Used `http_req_failed: ["rate<0.5"]` to ensure the error rate remains below 50%.
+
+---
+
+## Lecture 2: What we learned in `test2.js`
+
+In `test2.js`, we evolved our script from a simple static load into a structured **Load Test** by implementing **Stages** (Ramping Users):
+
+1. **Ramping with Stages:**
+   - Instead of a fixed number of VUs for a fixed duration, we passed an array of `stages` inside our `options`.
+   - **Ramp-Up:** `{ duration: '4s', target: 2 }` gradually increases the traffic up to 2 Virtual Users over 4 seconds.
+   - **Hold/Peak:** `{ duration: '5s', target: 5 }` pushes the traffic to 5 VUs and holds that peak load for 5 seconds.
+   - **Ramp-Down:** `{ duration: '3s', target: 0 }` gracefully scales the users back down to 0 over 3 seconds.
+   
+2. **Why Use Stages?**
+   - Gently ramping user traffic mimics real-world human behavior much better than instantly dropping maximum load (which is more like a Spike test). It allows system components (like load balancers and auto-scalers) time to react and warm up appropriately.
+
+3. **Combining Features:**
+   - We successfully combined our new `stages` with tight `thresholds` to ensure that our system didn't just survive the load curve, but that its latency (`p(95)`) remained within our SLA boundaries the entire time.
