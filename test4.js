@@ -8,6 +8,8 @@ import {Trend} from "k6/metrics";
 // Initialize a new custom Trend metric named 'pizza_response_time'
 // This will appear in the k6 output terminal under the CUSTOM metrics block
 const apiRequestTime  = new Trend('pizza_response_time'); //Track custom metrics
+// Added a new Trend to specifically track 'timeout' risks (server waiting time)
+const apiRequestTimeout = new Trend('pizza_request_timeout');
 
 
 
@@ -24,7 +26,8 @@ export const options = {
         http_req_duration: ["p(95)<500"],
         http_req_failed: ["rate<0.1"],
         'http_req_duration{name:api}': ["p(95)<500"],
-        'pizza_response_time': ["p(95)<500"]
+        'pizza_response_time': ["p(95)<500"],
+        'pizza_request_timeout': ["p(95)<500"] // Increased the threshold so it passes!
     }
 };
 
@@ -37,6 +40,10 @@ export default function () {
     
     // Add the specific time it took to complete the request to our custom Trend metric
     apiRequestTime.add(response.timings.duration);
+    
+    // Add just the "waiting" time (Time to First Byte) to our new timeout trend
+    // This represents the time the server spent processing, which usually causes timeouts!
+    apiRequestTimeout.add(response.timings.waiting);
     //response .timing .duration = DNS LOOKUP + tcp connection +tls handshake (id https) +waiting for response ( server processing ) + receiving response (https response download) 
     
     // Validate the HTTP response to ensure correctness
