@@ -96,3 +96,26 @@ In `test4.js`, we introduced **Custom Metrics**:
 3. **Evaluating Custom Metrics:**
    - When the test finished, a brand new `CUSTOM` metrics block appeared in the terminal output, displaying our `pizza_response_time` cleanly alongside standard HTTP metrics.
    - We also successfully ran thresholds directly onto our custom metric: `'pizza_response_time': ["p(95)<500"]`, showing that custom metrics are a first-class citizen in k6.
+
+---
+
+## Lecture 5: End-to-End Testing (`e2e.js`)
+
+In `e2e.js`, we combined everything we learned to build a multi-stage **End-to-End (E2E) Workflow**:
+
+1. **Organizing with Groups:**
+   - We imported `group` from `k6` to bundle our logical stages together (e.g., separating Registration from Login).
+   - Groups natively structure your code and aggregate k6 terminal metrics cleanly by feature.
+
+2. **Dynamic Data Generation:**
+   - Instead of hardcoding a username (which inevitably causes "User Already Exists" database errors over long durations), we dynamically generated variables: `const USERNAME = "abhinav" + Date.now() + Math.random();`.
+   - By putting this logic *inside* the `default function()`, every Virtual User iteration successfully gets a fresh identity on the fly!
+
+3. **Parsing JSON & Deep Property Validation:**
+   - Because HTTP load bodies are pure strings over the network, trying to access `response.body.token` fails natively.
+   - We used `response.json()` to parse that string into a proper JavaScript Object, allowing us to perform deep, advanced verification checks like `jsonBody.token.length > 4`.
+
+4. **Passing Variables Between Transactions:**
+   - We cleverly declared `let authToken = "";` globally *outside* of our groups.
+   - Once the login group succeeded, we extracted the token dynamically via `loginresponse.json("token")` and stored it directly in `authToken`.
+   - This exact architecture is heavily used by performance engineers to capture Session IDs or JWT tokens and pass them dynamically downstream to test secure API endpoints!
