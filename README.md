@@ -76,3 +76,23 @@ In `test3.js`, we focused on **Assertions** and **Granular Thresholds**:
    - We added a specialized threshold: `'http_req_duration{name:api}': ["p(95)<500"]`.
    - Instead of tracking the duration of *all* HTTP requests globally, this applies a threshold strictly to requests that possess the specific tag `name:api`.
    - This allows you to set different performance SLA rules for different endpoints (e.g., your `/login` API might need to be `<200ms`, while your `/search` API only needs to be `<800ms`).
+
+---
+
+## Lecture 4: What we learned in `test4.js`
+
+In `test4.js`, we introduced **Custom Metrics**:
+
+1. **Creating a Trend Metric:**
+   - We imported `Trend` from `k6/metrics`.
+   - We instantiated a new custom metric at the top of our script: `const apiRequestTime = new Trend('pizza_response_time');`.
+   - Custom metrics allow us to track specific data points (like processing time or business logic steps) during our load test, separately from the built-in HTTP metrics.
+
+2. **Populating the Metric:**
+   - Inside our test loop, after making the HTTP request, we captured the precise internal response duration and sent it to our metric:
+   - `apiRequestTime.add(response.timings.duration);`
+   - By adding to this `Trend`, k6 automatically tracks the min, max, average, and percentiles for this exact value over the life of the test!
+
+3. **Evaluating Custom Metrics:**
+   - When the test finished, a brand new `CUSTOM` metrics block appeared in the terminal output, displaying our `pizza_response_time` cleanly alongside standard HTTP metrics.
+   - We also successfully ran thresholds directly onto our custom metric: `'pizza_response_time': ["p(95)<500"]`, showing that custom metrics are a first-class citizen in k6.
