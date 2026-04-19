@@ -3,9 +3,10 @@
 ![k6 Performance Suite Hero Banner](assets/hero_banner.png)
 
 [![k6](https://img.shields.io/badge/k6-Performance-purple.svg)](https://k6.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-Cloud-orange.svg)](https://grafana.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-v18+-green.svg)](https://nodejs.org/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-Ready-blue.svg)](https://github.com/features/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 `k6Load` is a modern, hands-on repository designed to master performance testing. From simple API pings to complex, browser-driven end-to-end flows, this suite covers everything you need to build resilient applications.
 
@@ -46,6 +47,27 @@ Performance is a feature. A single user might see a fast app, but **1,000 users*
 - **📊 Custom Metrics**: Track `Rate`, `Trend`, and `Counter` for business-critical KPIs.
 - **☁️ Cloud Integrated**: Seamless execution in **Grafana Cloud**.
 - **🤖 CI/CD Ready**: Fully automated via GitHub Actions.
+
+---
+
+## 🌐 Hybrid Testing: The "Real User" Experience
+
+Most tools only test the **Backend (API)** or the **Frontend (UI)**. `browserTest.js` does **both at the same time.**
+
+### 🔄 Parallel Power
+In `browserTest.js`, we run two independent scenarios simultaneously:
+1. **The Backend Stress**: Thousands of HTTP requests (simulated users) hammer the server to create high load.
+2. **The UI Journey**: Real browser instances (Chromium) navigate the website, click buttons, and log in while the backend is under stress.
+
+### 🧪 Why this matters
+This approach lets you measure **Web Vitals** (LCP, FID, CLS) in a worst-case scenario. You can answer:
+- *"Does the UI become unresponsive when the API is slow?"*
+- *"Is our First Input Delay (FID) still under 100ms when 1000 users are hitting the server?"*
+
+### 📁 How it works in this repo
+- Uses the `k6/browser` module (Playwright-compatible).
+- Tracks **LCP (Largest Contentful Paint)** and **CLS (Layout Shift)** automatically.
+- Allows you to simulate real human interactions (typing, clicking, waiting) alongside raw protocol traffic.
 
 ---
 
@@ -112,10 +134,6 @@ When the test finishes, keep an eye on:
 - **VUs**: 👥 Active simulated users.
 
 ---
-
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 Built with ❤️ by [Abhinav](https://github.com/abhinav)
