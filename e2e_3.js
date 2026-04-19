@@ -1,13 +1,16 @@
 import http from "k6/http";
 import { check, sleep, group } from "k6";
-import { Rate } from "k6/metrics";
-
+import { Counter, Rate } from "k6/metrics";
 
 // Configuration for test run
 const BASE_URL = "https://quickpizza.grafana.com";
 const password = "secureabhinav123";
 
-const authentication_rate = new Rate('authentication_rate')
+const authentication_rate = new Rate('authentication_rate');
+
+const successful_orders = new Counter("successful_orders")
+
+
 
 // Defines user ramp-up and threshold targets (pass/fail criteria)
 export const options = {
@@ -22,7 +25,10 @@ export const options = {
         'iteration_duration': ['p(95)<8000'],
         // Group thresholds do not need nested extra quotes around the group name!
         'group_duration{group:::pizza generation}': ['p(95)<500'],
-        'group_duration{group:::retrieve generated pizza}': ['p(95)<500']
+        'group_duration{group:::retrieve generated pizza}': ['p(95)<500'],
+        'authentication_rate': ['rate>0.95'],
+        'successful_orders': ['count>10']
+
     }
 };
 
@@ -103,6 +109,7 @@ export default function () {
         });
 
         if (pizzaGenerated) {
+            successful_orders.add(1);
             generatedPizzaId = pizzaResponse.json("pizza.id") || pizzaResponse.json("id");
             console.log(`[SUCCESS] Generated Pizza ID: ${generatedPizzaId}`);
         } else {

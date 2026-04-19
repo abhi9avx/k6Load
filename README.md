@@ -173,9 +173,9 @@ In `e2e_2.js`, we finalized our End-to-End load testing suite by chaining an aut
 
 ---
 
-## Lecture 8: Custom Metrics (Rate vs Trend) (`e2e_3.js`)
+## Lecture 8: Custom Metrics (Rate, Trend, and Counter) (`e2e_3.js`)
 
-In `e2e_3.js`, we integrated first-class custom visualization metrics logic directly into k6 to track very specific system health indicators (like our authentication health!). K6 offers multiple custom metric types, but the two most heavily used dynamically are **Trend** and **Rate**.
+In `e2e_3.js`, we integrated first-class custom visualization metrics logic directly into k6 to track very specific system health indicators (like our authentication health!). K6 offers multiple custom metric types, but the three most heavily used dynamically are **Trend**, **Rate**, and **Counter**.
 
 ### Understanding `Trend` 
 A `Trend` metric continuously calculates statistics on numerical data points (min, max, average, and percentiles).
@@ -188,6 +188,13 @@ A `Rate` metric calculates and tracks the percentage of non-zero values added to
 - **Implementation**: We initialized it explicitly outside the execution loop to gather global state tracking across all VUs: `const authentication_rate = new Rate('authentication_rate')`.
 - **Adding Logics**: Inside our `User Login` validation block, if the check securely succeeded, we recorded it: `authentication_rate.add(1);`. If it failed, we explicitly logged: `authentication_rate.add(0);`.
 - **Output:** k6 seamlessly analyzes the 1s vs 0s mathematical distribution and generates a clean custom block output during the terminal summary: `authentication_rate............: 100.00% 12 out of 12`. 
+
+### Understanding `Counter`
+A `Counter` metric strictly calculates the cumulative mathematical sum of all values explicitly added to it over the lifetime of the test.
+- **Best Used For**: Tracking pure payload volume or total occurrence count of a business transaction (e.g., total successful orders placed, total active websockets). 
+- **Implementation**: Initialized globally: `const successful_orders = new Counter("successful_orders")`.
+- **Adding Logics**: Because a `Counter` calculates mass rather than ratio, we just fire `.add(1)` exactly when our logic successfully completes. When it explicitly fails, we do *nothing*, because adding 0 mathematically does nothing to a sum!
+- **Output:** It will cleanly tally all integers successfully pushed during the test run regardless of how many users are iterating: `successful_orders..............: 12      0.819634/s`.
 
 ### Applying Strict Thresholds on Custom Metrics
 Because they are fully integrated core components, you can apply execution thresholds precisely on the newly minted custom variables you create!
