@@ -1,0 +1,137 @@
+name: Manual k6 Run
+
+run-name: >-
+  k6 ${{ inputs.execution_mode }} |
+  ${{ inputs.test_file }} |
+  ${{ inputs.test_type }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_file:
+        description: "Choose the k6 script to run"
+        required: true
+        default: "e2e_k6.js"
+        type: choice
+        options:
+          - test1.js
+          - test2.js
+          - test3.js
+          - test4.js
+          - e2e.js
+          - e2e_1.js
+          - e2e_2.js
+          - e2e_3.js
+          - e2e_k6.js
+          - browserTest.js
+      test_type:
+        description: "Profile for e2e_k6.js. Other files will ignore this input."
+        required: true
+        default: "smoke"
+        type: choice
+        options:
+          - smoke
+          - load
+          - stress
+          - spike
+          - soak
+      execution_mode:
+        description: "Run locally on GitHub runner, or use Grafana Cloud"
+        required: true
+        default: "local"
+        type: choice
+        options:
+          - local
+          - cloud
+          - cloud-local-execution
+      browser_headless:
+        description: "Used only for browserTest.js"
+        required: true
+        default: true
+        type: boolean
+      extra_flags:
+        description: "Optional extra k6 flags, for example: --vus 1 --iterations 1"
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  run-k6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    env:
+      TEST_TYPE: ${{ inputs.test_type }}
+      K6_BROWSER_HEADLESS: ${{ inputs.browser_headless }}
+      K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+      K6_CLOUD_STACK_ID: ${{ secrets.K6_CLOUD_STACK_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup k6 for protocol tests
+        if: ${{ inputs.test_file != 'browserTest.js' }}
+        uses: grafana/setup-k6-action@v1
+
+      - name: Setup k6 with browser support
+        if: ${{ inputs.test_file == 'browserTest.js' }}
+        uses: grafana/setup-k6-action@v1
+        with:
+          browser: true
+
+      - name: Show selected inputs
+        run: |
+          echo "test_file=${{ inputs.test_file }}"
+          echo "test_type=${{ inputs.test_type }}"
+          echo "execution_mode=${{ inputs.execution_mode }}"
+          echo "browser_headless=${{ inputs.browser_headless }}"
+          echo "extra_flags=${{ inputs.extra_flags }}"
+
+      - name: Validate cloud secrets when needed
+        if: ${{ inputs.execution_mode != 'local' }}
+        run: |
+          if [ -z "${K6_CLOUD_TOKEN}" ]; then
+            echo "Missing GitHub secret: K6_CLOUD_TOKEN"
+            exit 1
+          fi
+
+      - name: Build k6 command
+        id: build
+        shell: bash
+        run: |
+          if [ "${{ inputs.execution_mode }}" = "local" ]; then
+            COMMAND="k6 run --address 127.0.0.1:0"
+          elif [ "${{ inputs.execution_mode }}" = "cloud" ]; then
+            COMMAND="k6 cloud run"
+          else
+            COMMAND="k6 cloud run --local-execution"
+          fi
+
+          if [ -n "${{ inputs.extra_flags }}" ]; then
+            COMMAND="${COMMAND} ${{ inputs.extra_flags }}"
+          fi
+
+          COMMAND="${COMMAND} ${{ inputs.test_file }}"
+
+          echo "command=${COMMAND}" >> "$GITHUB_OUTPUT"
+
+      - name: Run selected k6 test
+        shell: bash
+        run: ${{ steps.build.outputs.command }}
+
+      - name: Write workflow summary
+        shell: bash
+        run: |
+          {
+            echo "## k6 Run Summary"
+            echo ""
+            echo "- Script: \`${{ inputs.test_file }}\`"
+            echo "- Profile: \`${{ inputs.test_type }}\`"
+            echo "- Execution mode: \`${{ inputs.execution_mode }}\`"
+            echo "- Browser headless: \`${{ inputs.browser_headless }}\`"
+            echo "- Extra flags: \`${{ inputs.extra_flags || 'none' }}\`"
+            echo "- Command: \`${{ steps.build.outputs.command }}\`"
+            echo ""
+            echo "> \`test_type\` is used by \`e2e_k6.js\`. Other scripts safely ignore it."
+          } >> "$GITHUB_STEP_SUMMARY"

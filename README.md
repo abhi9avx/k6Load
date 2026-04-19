@@ -520,6 +520,56 @@ Stream results to Grafana Cloud while executing locally:
 TEST_TYPE=smoke k6 cloud run --local-execution e2e_k6.js
 ```
 
+## GitHub Actions Manual Trigger
+
+This repository now includes a manual workflow at:
+
+- `.github/workflows/k6-manual-run.yml`
+
+You can trigger it from the GitHub Actions tab and choose:
+
+- which file to run
+- which `TEST_TYPE` profile to use
+- whether to run locally on the GitHub runner or in Grafana Cloud
+- whether browser mode should be headless
+- any extra k6 flags such as `--vus 1 --iterations 1`
+
+### How to use it
+
+1. Open the repository in GitHub.
+2. Go to the `Actions` tab.
+3. Open the workflow named `Manual k6 Run`.
+4. Click `Run workflow`.
+5. Select the script, profile, and execution mode.
+6. Start the workflow.
+
+### Recommended choices
+
+- Use `e2e_k6.js` if you want to choose `smoke`, `load`, `stress`, `spike`, or `soak`.
+- Use `local` execution if you just want the test to run on GitHub-hosted runners.
+- Use `cloud` or `cloud-local-execution` if you want results in Grafana Cloud.
+
+### Required GitHub secrets for cloud runs
+
+If you select `cloud` or `cloud-local-execution`, add this repository secret in GitHub:
+
+- `K6_CLOUD_TOKEN`: your Grafana Cloud k6 token
+
+Optional secret:
+
+- `K6_CLOUD_STACK_ID`: your Grafana Cloud stack ID
+
+You can add secrets in:
+
+- `GitHub repo > Settings > Secrets and variables > Actions`
+
+### Notes about the workflow
+
+- `TEST_TYPE` is mainly used by `e2e_k6.js`.
+- Other scripts will ignore the `TEST_TYPE` input safely.
+- The workflow uses `grafana/setup-k6-action@v1`, which is Grafana’s official GitHub Action for setting up k6.
+- For local GitHub Actions runs, the workflow uses `--address 127.0.0.1:0` to avoid the default `6565` port warning.
+
 ## How To Read Results
 
 When a k6 run finishes, focus on these sections:
