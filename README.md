@@ -170,3 +170,30 @@ In `e2e_2.js`, we finalized our End-to-End load testing suite by chaining an aut
 
 6. **Codebase Readability & Professional Formatting:**
    - As scripts become complex, massive tutorial-style comments can become cluttered. We refactored the entire codebase to employ concise, single-line documentation, mimicking how Senior Software Engineers structure their test files.
+
+---
+
+## Lecture 8: Custom Metrics (Rate vs Trend) (`e2e_3.js`)
+
+In `e2e_3.js`, we integrated first-class custom visualization metrics logic directly into k6 to track very specific system health indicators (like our authentication health!). K6 offers multiple custom metric types, but the two most heavily used dynamically are **Trend** and **Rate**.
+
+### Understanding `Trend` 
+A `Trend` metric continuously calculates statistics on numerical data points (min, max, average, and percentiles).
+- **Best Used For**: Tracking timing or numeric amounts over time. For example, if you want to track how quickly a very specific microservice resolves a function payload, you would pass `myTrendMetric.add(req.timings.duration)`.
+- **Output:** It will physically generate a comprehensive statistical layout: `pizza_response_time... avg=300ms min=150ms p(95)=400ms`. (We built a Trend metric back in Lecture 4!).
+
+### Understanding `Rate`
+A `Rate` metric calculates and tracks the percentage of non-zero values added to it.
+- **Best Used For**: Tracking boolean success vs failure logic ratios safely. It's essentially an automated pass/fail percentage system entirely isolated from standard HTTP errors.
+- **Implementation**: We initialized it explicitly outside the execution loop to gather global state tracking across all VUs: `const authentication_rate = new Rate('authentication_rate')`.
+- **Adding Logics**: Inside our `User Login` validation block, if the check securely succeeded, we recorded it: `authentication_rate.add(1);`. If it failed, we explicitly logged: `authentication_rate.add(0);`.
+- **Output:** k6 seamlessly analyzes the 1s vs 0s mathematical distribution and generates a clean custom block output during the terminal summary: `authentication_rate............: 100.00% 12 out of 12`. 
+
+### Applying Strict Thresholds on Custom Metrics
+Because they are fully integrated core components, you can apply execution thresholds precisely on the newly minted custom variables you create!
+```javascript
+thresholds: {
+    // K6 will instantly fail the system load test if specific custom user authentications drop below 95%!
+    'authentication_rate': ['rate>0.95'] 
+}
+```
