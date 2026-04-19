@@ -141,3 +141,32 @@ This script refines the **End-to-End (E2E)** flow focusing on the essential prel
   - The script asserts a 90%+ pass rate on all `checks`.
   - The entire test loop duration per Virtual User must complete in `< 8000ms`.
 - **`sleep(1)`**: A deliberate 1-second pause at the end of each iteration simulates the "think time" of a real user reading the screen before navigating away or continuing.
+
+---
+
+## Lecture 7: Advanced API Interaction & Strict Payloads (`e2e_2.js`)
+
+In `e2e_2.js`, we finalized our End-to-End load testing suite by chaining an authenticated API call explicitly reliant on the data generated in our previous steps.
+
+### What we learned:
+1. **Authenticated Requests:**
+   - We utilized the extracted JWT token from our login group (`authToken`) and dynamically injected it into the headers of a new `POST` request.
+   - Using `'Authorization' : \`Bearer \${authToken}\`` natively allowed our script to bypass strict API security walls in real-time.
+
+2. **Strict API Payloads:**
+   - We learned that APIs in strongly-typed languages (like Go, which QuickPizza uses) often employ strict schema parsers. 
+   - Passing unknown extra fields (such as hypothetical `minIngredients` or `name` fields) results in immediate `400 Bad Request` exceptions because the API parser physically rejects unknown JSON parameters. We refined our payload to perfectly match the API's constraints (`maxCaloriesPerSlice` and `mustBeVegetarian`).
+   
+3. **Advanced JSON Extraction:**
+   - We implemented complex nested extraction logic to store variables: `let generatedPizzaId = pizzaResponse.json("pizza.id") || pizzaResponse.json("id");`
+   - This prevents our script from crashing and cleanly captures generated IDs regardless of backend injection logic.
+   
+4. **Resilient Thresholds:**
+   - When hitting public APIs with intensive generation algorithms, latency often fluctuates. We adjusted our `p(95)` constraint upward to 500ms allowing the testing script to run accurately and comprehensively under load without aggressively triggering failure alarms on minor service spikes.
+
+5. **Closed-Loop Request Testing:**
+   - We perfected the End-to-End sequence by storing the `generatedPizzaId` globally within the iteration loop and utilizing it downstream in a final `GET` request (`/api/pizza/${generatedPizzaId}`).
+   - We strictly validated that the `GET` API successfully returned an object where the ID perfectly matched the one we freshly generated, confirming absolute data integrity!
+
+6. **Codebase Readability & Professional Formatting:**
+   - As scripts become complex, massive tutorial-style comments can become cluttered. We refactored the entire codebase to employ concise, single-line documentation, mimicking how Senior Software Engineers structure their test files.
