@@ -119,3 +119,25 @@ In `e2e.js`, we combined everything we learned to build a multi-stage **End-to-E
    - We cleverly declared `let authToken = "";` globally *outside* of our groups.
    - Once the login group succeeded, we extracted the token dynamically via `loginresponse.json("token")` and stored it directly in `authToken`.
    - This exact architecture is heavily used by performance engineers to capture Session IDs or JWT tokens and pass them dynamically downstream to test secure API endpoints!
+
+---
+
+## Lecture 6: End-to-End User Flow Refinement (`e2e_1.js`)
+
+This script refines the **End-to-End (E2E)** flow focusing on the essential preliminary steps of a user's journey: account registration followed immediately by logging in.
+
+### What the script does:
+1. **Unique Identity Generation**: To prevent database collision errors during parallel running, every Virtual User generates a mathematically randomized username using timestamps and `Math.random()`.
+2. **User Registration (`/api/users`)**: The VU performs an HTTP POST request to the registration API to create a new user account.
+3. **Login & Auth (`/api/users/token/login`)**: Immediately after registration, the VU logs in using the exact same credentials.
+4. **Token Extraction**: The script robustly verifies the presence of an authentication token in the login response, extracts it, and saves it in a variable. This makes the script easily extensible; any future endpoint testing (like fetching a profile or submitting an order) can utilize this stored token.
+
+### Why is it built this way?
+- **Load Profile (Stages)**: Using stages, we gradually ramp up to 4 VUs over 10 seconds and ramp back down. This prevents "shocking" the server and mimics a more realistic staggered surge of traffic.
+- **`groups`**: The script uses k6 `groups` to categorize requests into "user registration" and "user login". When reviewing the test results, metrics are automatically organized by these groups resulting in much clearer insights and distinct response times for each step.
+- **Error Handling & `checks() `**: We meticulously validate the HTTP response statuses and data types before declaring an operation successful. If validations fail, `console.error` provides visibility instead of failing silently.
+- **Thresholds**: We've set clear SLA limitations:
+  - 95% of HTTP requests must respond in `< 400ms`.
+  - The script asserts a 90%+ pass rate on all `checks`.
+  - The entire test loop duration per Virtual User must complete in `< 8000ms`.
+- **`sleep(1)`**: A deliberate 1-second pause at the end of each iteration simulates the "think time" of a real user reading the screen before navigating away or continuing.
