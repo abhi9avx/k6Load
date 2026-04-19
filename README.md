@@ -10,6 +10,9 @@
 
 `k6Load` is a modern, hands-on repository designed to master performance testing. From simple API pings to complex, browser-driven end-to-end flows, this suite covers everything you need to build resilient applications.
 
+> [!IMPORTANT]
+> **New to Performance Testing?** Check out our [**K6 Concepts & Glossary Guide**](K6_CONCEPTS.md) to understand all the technical terms!
+
 ---
 
 ## 🌟 The Mission: Why Performance Testing?
