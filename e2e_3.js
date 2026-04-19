@@ -29,7 +29,13 @@ export const options = {
         'authentication_rate': ['rate>0.95'],
         'successful_orders': ['count>10']
 
-    }
+    },
+    cloud: {
+    // Project: Default project
+    projectID: 7317576,
+    // Test runs with the same name groups test runs together.
+    name: 'Test E2E'
+  }
 };
 
 export default function () {

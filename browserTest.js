@@ -26,8 +26,13 @@ export const options = {
         }
     },
 
-    thresholds : {
-        checks:['rate ==1.0']
+    thresholds: {
+        checks: ['rate==1.0'],
+        browser_web_vital_cls: ['p(90) < 0.1'],   // Cumulative Layout Shift (Lower is better, < 0.1 is Good)
+        browser_web_vital_fcp: ['p(90) < 1800'],  // First Contentful Paint (< 1800ms is Good)
+        browser_web_vital_lcp: ['p(90) < 2500'],  // Largest Contentful Paint (< 2500ms is Good)
+        browser_web_vital_fid: ['p(90) < 100'],   // First Input Delay (< 100ms is Good)
+        browser_web_vital_ttfb: ['p(90) < 800']   // Time to First Byte (< 800ms is Good)
     }
 }
 

@@ -2,6 +2,58 @@
 
 A load and performance testing suite using [k6](https://k6.io/).
 
+## Prerequisites & Installation
+
+Before running any load tests in this repository, you must properly install and configure your k6 environment.
+
+### 1. Installing k6 Core
+k6 is distributed as a single executable binary.
+- **macOS:** `brew install k6`
+- **Windows:** `winget install k6`
+- **Linux (Debian/Ubuntu):**
+  ```bash
+  sudo gpg -k
+  sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+  echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+  sudo apt-get update
+  sudo apt-get install k6
+  ```
+
+### 2. Setting up Grafana Cloud (Optional)
+To stream your load test metrics directly to beautiful Grafana dashboards in the cloud instead of your local terminal:
+1. Create a free account at [grafana.com/products/cloud/k6/](https://grafana.com/products/cloud/k6/).
+2. Generate an API token from your account dashboard.
+3. Authenticate your local k6 CLI with the cloud via:
+   ```bash
+   k6 login cloud --token <YOUR_GRAFANA_CLOUD_TOKEN>
+   ```
+4. Within your script's `options`, ensure you have a targeted `cloud` block:
+   ```javascript
+   export const options = {
+       cloud: {
+           projectID: 1234567, // Replace with your Project ID
+           name: 'My Cloud Test'
+       }
+   };
+   ```
+5. Run the test with the `--out` cloud flag:
+   ```bash
+   k6 run --out cloud script.js
+   ```
+
+### 3. Configuring Browser Testing (k6/browser)
+If you are running the hybrid UI tests (`browserTest.js`), k6 requires a local installation of a Chromium-based browser to automate. You must declare the path to this executable physically in your terminal command.
+
+- Export the **Headless** toggle (`true` for background, `false` to watch the ghost user).
+- Export the **Executable Path** (e.g., Brave, Google Chrome, Chromium).
+
+*macOS Example:*
+```bash
+K6_BROWSER_EXECUTABLE_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" K6_BROWSER_HEADLESS=false k6 run browserTest.js
+```
+
+---
+
 ## Types of Performance Testing
 
 Understanding the different types of performance testing is crucial for designing the right k6 scenarios. 
@@ -222,6 +274,14 @@ In `browserTest.js`, we evolved our testing strategy by integrating the **`k6/br
 
 3. **Assertions on Browser Data:**
    - After interacting with the document, we retrieved the live text using `textContent()` and immediately implemented a `check()` against it: `text.includes("Welcome to Rahul Shetty Academy")`. This proves our system load isn't breaking the rendering of functional visual components for the end user.
+
+4. **Web Vitals Thresholds:**
+   - We introduced SLA assertions strictly bound to Core Web Vitals to guarantee optimal frontend UX despite heavy backend simulation. The browser thresholds dynamically parse real rendering times:
+     - **CLS (Cumulative Layout Shift):** Ensures UI visual stability (`< 0.1`).
+     - **FCP (First Contentful Paint):** Limits first text/image render latency (`< 1800ms`).
+     - **LCP (Largest Contentful Paint):** Restricts main content render block duration (`< 2500ms`).
+     - **FID (First Input Delay):** Establishes an interactive responsiveness SLA (`< 100ms`).
+     - **TTFB (Time to First Byte):** Controls the delay for initial server response (`< 800ms`).
 
 ### Execution Information
 
