@@ -204,3 +204,35 @@ thresholds: {
     'authentication_rate': ['rate>0.95'] 
 }
 ```
+
+---
+
+## Lecture 9: Hybrid Browser & Backend Testing (`browserTest.js`)
+
+In `browserTest.js`, we evolved our testing strategy by integrating the **`k6/browser`** module to interact with real DOM elements, creating a hybrid test suite that simultaneously stresses the backend via HTTP and verifies the frontend logic via a headless or visible browser.
+
+### What the script does:
+1. **Parallel Scenarios:**
+   - **Frontend UI (`ui`)**: Uses a browser instance to automate real user interactions on `https://rahulshettyacademy.com/locatorspractice/`. It types in credentials, clicks the submit button, waits for the Single-Page Application (SPA) to render, and dynamically extracts the resulting `h1` header to validate that the login successfully transitioned the page to the dashboard.
+   - **Backend Stress (`backendStress`)**: Uses the standard `k6/http` module to repeatedly target the same system concurrently, generating background API noise and simulating multi-user load while the browser is attempting to operate.
+
+2. **Browser Context & Locators:**
+   - We utilized Playwright-like syntax (`await page.locator(...).type(...)` and `.click()`) natively inside k6 to drive user behavior. 
+   - We also successfully managed timing dependencies, effectively pausing the script using `page.waitForTimeout()` when interacting with asynchronous components like SPA routing.
+
+3. **Assertions on Browser Data:**
+   - After interacting with the document, we retrieved the live text using `textContent()` and immediately implemented a `check()` against it: `text.includes("Welcome to Rahul Shetty Academy")`. This proves our system load isn't breaking the rendering of functional visual components for the end user.
+
+### Execution Information
+
+Running browser automation tests in k6 requires defining the local path to your Chrome or Chromium-based executable in your environment variables. 
+
+To run headless (no graphical interface):
+```bash
+K6_BROWSER_EXECUTABLE_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" K6_BROWSER_HEADLESS=true k6 run browserTest.js
+```
+
+To run visibly (for debugging user interactions):
+```bash
+K6_BROWSER_EXECUTABLE_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" K6_BROWSER_HEADLESS=false k6 run browserTest.js
+```
