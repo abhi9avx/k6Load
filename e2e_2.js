@@ -15,7 +15,10 @@ export const options = {
     thresholds: {
         'http_req_duration': ['p(95)<500'],
         'checks': ['rate>0.90'],
-        'iteration_duration': ['p(95)<8000']
+        'iteration_duration': ['p(95)<8000'],
+        // Group thresholds do not need nested extra quotes around the group name!
+        'group_duration{group:::pizza generation}': ['p(95)<500'],
+        'group_duration{group:::retrieve generated pizza}': ['p(95)<500']
     }
 };
 
