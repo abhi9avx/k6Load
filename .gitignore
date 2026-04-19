@@ -12,3 +12,6 @@ yarn-error.log*
 
 # Env variables
 .env
+
+# Local interview notes
+interviewread.md
